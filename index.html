@@ -3,14 +3,371 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <link rel="stylesheet" href="style.css">
+    <title>anyshop</title>
+    <link rel="stylesheet" href="src/output.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="js/app.js" type="module"></script>
 </head>
-<body>
-    <header class="site-header">
-        Browse
+<body class="text-sm text-neutral-900 min-h-screen flex flex-col">
+    <!-- constant header: bare navbar -->
+    <header class="sticky top-0 z-50 bg-white">
+        <nav class="max-w-6xl mx-auto px-6 py-5 flex items-center text-xs uppercase tracking-widest">
+            <div class="basis-1/4">
+                <a href="#" data-view="home" class="text-base normal-case tracking-normal">
+                    anyshop
+                </a>
+            </div>
+
+            <div class="basis-1/2 flex justify-center text-neutral-500 gap-8">
+                <a href="#" data-view="home" class="hover:text-neutral-900 hover:underline">
+                    Home
+                </a>
+                <a href="#" data-view="browse" class="hover:text-neutral-900 hover:underline">
+                    Shop
+                </a>
+                <a href="#" id="aboutLink" class="hover:text-neutral-900 hover:underline">
+                    About
+                </a>
+            </div>
+
+            <div class="basis-1/4 flex justify-end">
+                <a href="#" data-view="cart" class="hover:text-neutral-500">
+                    Cart (
+                        <span id="cartCount" data-view="cart">0</span>
+                        )
+                </a>
+            </div>
+        </nav>
     </header>
-    <div id="products"></div>
-    <script src="app.js"></script>
+
+    <!--
+    swap between 5 views making them hidden/shown
+    by adding/removing the Tailwind "hidden" class
+     -->
+    <main class="flex-1 w-full max-w-6xl mx-auto px-6 py-12">
+        <!-- 1. home view (default) -->
+        <section id="homeView" class="view">
+            <div class="text-center py-44">
+                <h2 class="text-6xl mb-20">
+                    Buy anything you want, <br> anytime all on anyshop.
+                </h2>
+                <!-- goes to the browse view (handled by the main click listener in app.js) -->
+                <button data-view="browse" class="border border-black px-10 py-2 text-xs uppercase tracking-widest hover:bg-black hover:text-white">
+                    Shop now
+                </button>
+            </div>
+            <h3 class="text-xs uppercase tracking-widest mb-6">
+                Featured Products
+            </h3>
+            <div id="featured" class="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-10"></div>
+        </section>
+
+        <!-- 2. browse view -->
+        <section id="browseView" class="view hidden">
+            <!-- title on the left, sort by dropdown on the right -->
+            <div class="flex justify-between items-end mb-10">
+                <h2 class="text-3xl">Shop All</h2>
+                <div class="text-xs flex items-center gap-2">
+                    <label for="sortBy" class="uppercase tracking-widest text-neutral-500">
+                        Sort by
+                    </label>
+                    <select id="sortBy" class="bg-transparent border-b border-neutral-300 py-1 focus:outline-none">
+                        <option value="name">Alphabetical</option>
+                        <option value="priceLow">Price (low to high)</option>
+                        <option value="priceHigh">Price (high to low)</option>
+                        <option value="category">Category</option>
+                        <option value="rating">Rating</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex flex-col md:flex-row gap-12">
+                <!-- department column: accordion of filter options -->
+                <aside id="filters" class="md:w-56 shrink-0 text-xs">
+                    <div class="border-t border-neutral-200">
+                        <button class="accordion-btn w-full flex justify-between items-center py-4 uppercase tracking-widest">
+                            Name <span class="accordion-icon pointer-events-none transition-transform text-sm">▾</span>
+                        </button>
+                        <div class="accordion-body pb-5">
+                            <label for="searchName" class="sr-only">Search by name</label>
+                            <input type="text" id="searchName" placeholder="Search products"
+                                class="w-full bg-transparent border-b border-neutral-300 py-1 placeholder:text-neutral-400 focus:outline-none focus:border-neutral-900">
+                        </div>
+                    </div>
+
+                    <div class="border-t border-neutral-200">
+                        <button class="accordion-btn w-full flex justify-between items-center py-4 uppercase tracking-widest">
+                            Filters <span class="accordion-icon pointer-events-none transition-transform text-sm">▾</span>
+                        </button>
+                        <div class="accordion-body pb-5">
+                            <!-- active filters are added here as removable chips -->
+                            <div id="activeFilters" class="flex flex-wrap gap-2 text-neutral-500"></div>
+                            <button id="clearFilters" class="underline underline-offset-4 mt-3 text-neutral-500 hover:text-neutral-900">Clear all</button>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-neutral-200">
+                        <button class="accordion-btn w-full flex justify-between items-center py-4 uppercase tracking-widest">
+                            Categories <span class="accordion-icon pointer-events-none transition-transform text-sm">▾</span>
+                        </button>
+                        <!-- a checkbox for each category is built from the data in browse.js -->
+                        <div id="categoryList" class="accordion-body pb-5 flex flex-col gap-2 accent-neutral-900"></div>
+                    </div>
+
+                    <div class="border-t border-neutral-200">
+                        <button class="accordion-btn w-full flex justify-between items-center py-4 uppercase tracking-widest">
+                            Ratings <span class="accordion-icon pointer-events-none transition-transform text-sm">▾</span>
+                        </button>
+                        <!-- pick one: show products with at least this many stars -->
+                        <div id="ratingOptions" class="accordion-body pb-5 flex flex-col gap-2 accent-neutral-900">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="radio" name="rating" value="0" checked> Any rating
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="radio" name="rating" value="5"> ★★★★★
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="radio" name="rating" value="4"> ★★★★☆ &amp; up
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="radio" name="rating" value="3"> ★★★☆☆ &amp; up
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="radio" name="rating" value="2"> ★★☆☆☆ &amp; up
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="radio" name="rating" value="1"> ★☆☆☆☆ &amp; up
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-b border-neutral-200">
+                        <button class="accordion-btn w-full flex justify-between items-center py-4 uppercase tracking-widest">
+                            Price <span class="accordion-icon pointer-events-none transition-transform text-sm">▾</span>
+                        </button>
+                        <!-- type a price range; the "to" box starts at the highest price (set in browse.js) -->
+                        <div class="accordion-body pb-5 flex items-end gap-3">
+                            <div class="flex flex-col gap-1 flex-1">
+                                <label for="priceMinInput" class="text-neutral-500">From</label>
+                                <div class="flex items-center border-b border-neutral-300 focus-within:border-neutral-900">
+                                    $<input type="number" id="priceMinInput" min="0" step="1" value="0"
+                                        class="price-input w-full bg-transparent py-1 pl-1 focus:outline-none">
+                                </div>
+                            </div>
+                            <span class="pb-1 text-neutral-400">–</span>
+                            <div class="flex flex-col gap-1 flex-1">
+                                <label for="priceMaxInput" class="text-neutral-500">To</label>
+                                <div class="flex items-center border-b border-neutral-300 focus-within:border-neutral-900">
+                                    $<input type="number" id="priceMaxInput" min="0" step="1" value="0"
+                                        class="price-input w-full bg-transparent py-1 pl-1 focus:outline-none">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+
+                <!-- matching products -->
+                <div class="flex-1">
+                    <p id="resultCount" class="text-xs text-neutral-500 mb-6"></p>
+                    <div id="products" class="grid grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-10"></div>
+                    <p id="noMatches" class="hidden text-neutral-500">No products match these filters.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. single product view (filled in by products.js) -->
+        <section id="productView" class="view hidden">
+            <div id="productDetails"></div>
+        </section>
+
+        <!-- 4. shopping cart view -->
+        <section id="cartView" class="view hidden max-w-5xl mx-auto">
+            <h2 class="text-3xl mb-10">Cart</h2>
+
+            <div class="flex flex-col md:flex-row gap-12">
+                <!-- the items: one row per cart item (rows are built with createElement in cart.js) -->
+                <div class="flex-1">
+                    <table class="w-full text-left">
+                        <thead class="text-xs uppercase tracking-widest text-neutral-500 border-b border-neutral-200">
+                            <tr>
+                                <th class="py-3 w-8"></th>
+                                <th class="py-3 font-normal">Items</th>
+                                <th class="py-3"></th>
+                                <th class="py-3 font-normal">Price</th>
+                                <th class="py-3 font-normal">Quantity</th>
+                                <th class="py-3 font-normal text-right">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cartItems"></tbody>
+                    </table>
+                    <!-- shown instead of the rows when the cart is empty -->
+                    <p id="cartEmpty" class="hidden py-10 text-neutral-500">Your cart is empty.</p>
+                </div>
+
+                <!-- order summary: shipping, destination, tax and total -->
+                <aside class="md:w-72 flex flex-col gap-5">
+                    <h3 class="text-xs uppercase tracking-widest">Summary</h3>
+
+                    <label for="shippingMethod" class="flex flex-col gap-1 text-neutral-500">Shipping
+                        <select id="shippingMethod" class="bg-transparent border-b border-neutral-300 py-1 text-neutral-900 focus:outline-none disabled:opacity-40 disabled:cursor-not-allowed">
+                            <option value="standard">Standard</option>
+                            <option value="express">Express</option>
+                            <option value="priority">Priority</option>
+                        </select>
+                    </label>
+
+                    <label for="destination" class="flex flex-col gap-1 text-neutral-500">Destination
+                        <select id="destination" class="bg-transparent border-b border-neutral-300 py-1 text-neutral-900 focus:outline-none disabled:opacity-40 disabled:cursor-not-allowed">
+                            <option value="ca">Canada</option>
+                            <option value="us">United States</option>
+                            <option value="intl">International</option>
+                        </select>
+                    </label>
+
+                    <dl class="flex flex-col gap-2 border-t border-neutral-200 pt-5">
+                        <div class="flex justify-between"><dt class="text-neutral-500">Merchandise</dt><dd id="summaryMerch">$0.00</dd></div>
+                        <div class="flex justify-between"><dt class="text-neutral-500">Shipping</dt><dd id="summaryShipping">$0.00</dd></div>
+                        <div class="flex justify-between"><dt class="text-neutral-500">Tax</dt><dd id="summaryTax">$0.00</dd></div>
+                        <div class="flex justify-between border-t border-neutral-200 pt-3 mt-1"><dt>Total</dt><dd id="summaryTotal">$0.00</dd></div>
+                    </dl>
+                    <p class="text-xs text-neutral-400">Free shipping on orders over $500. 5% tax on orders to Canada.</p>
+
+                    <button id="checkout" class="border border-black px-10 py-2 text-xs uppercase tracking-widest hover:bg-black hover:text-white disabled:border-neutral-300 disabled:text-neutral-300 disabled:hover:bg-transparent disabled:cursor-not-allowed">Checkout</button>
+                </aside>
+            </div>
+        </section>
+    </main>
+
+    <!-- 5. about us (pop up dialog) -->
+    <dialog id="aboutDialog" class="p-10 w-full max-w-xl backdrop:bg-black/30">
+        <h2 class="text-2xl mb-4">About Us</h2>
+        <p class="mb-8 text-neutral-500">
+            "anyshop" is the front facing e-commerce shop for COMP 3512 Assignment 2.
+            <br><br>
+            It is a single page html app built in javascript, swapping between the five main navbar views
+            and uses the supplied .json data for all of the product information. The javascript code closely
+            follows the efficient methods for displaying and working through similar functionalities shown
+            in the labs and tutorials for COMP 3512.
+            <br><br>
+            Styling is done with Tailwind CSS inline styling in order to mimic modern e-commerce design trends
+            (super minimal, compressed text, emphasis on the product images and information).
+            <br><br>
+            The github repo link can be found here:
+
+            <a href="https://github.com/ntgarcia/comp3512a1" class="text-black hover:underline">
+                https://github.com/ntgarcia/comp3512a1
+            </a>
+
+            <br><br>
+            I, Nathan Garcia, am a BCIS student on my final semester for my degree.
+            Aside from my studies I am currently doing freelance graphic design, web design
+            as well as designing and overseeing the art direction for a clothing manufacturing
+            company based in Los Angeles.
+        </p>
+        <button id="aboutClose" class="border border-neutral-900 px-6 py-2 text-xs uppercase tracking-widest hover:bg-neutral-900 hover:text-white">Close</button>
+    </dialog>
+
+    <!-- snackbar message, shown for a few seconds instead of alert() -->
+    <div id="snackbar" class="hidden fixed bottom-12 left-1/2 -translate-x-1/2 bg-neutral-900 text-white text-xs tracking-wide px-12 py-6"></div>
+
+    <!-- constant footer -->
+    <footer class="border-t border-neutral-200 pt-20 mt-10">
+        <div class="max-w-6xl mx-auto px-6 py-8 flex justify-between text-xs text-neutral-500">
+            <p>© Nathan Garcia 201671101</p>
+            <div>
+                <p>Github Repository Link</p>
+                <a href="https://github.com/ntgarcia/comp3512a1" class="hover:text-neutral-900 hover:underline">
+                    https://github.com/ntgarcia/comp3512a1
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- one product card (browse + featured) -->
+    <template id="productCard">
+        <div class="flex flex-col gap-1">
+            <img src="" alt="" class="product-img w-full aspect-square object-cover bg-neutral-100 cursor-pointer mb-3">
+            <h3 class="font-normal"></h3>
+            <p class="rating text-xs text-neutral-500"></p>
+            <p class="price text-neutral-500"></p>
+            <!-- mt-auto pushes the button to the bottom so cards line up -->
+            <button class="btn-add mt-auto pt-3 text-left text-xs uppercase tracking-widest hover:underline underline-offset-2">
+                Add to cart
+            </button>
+        </div>
+    </template>
+
+    <!-- template for the single product view -->
+    <template id="productSingle">
+        <div class="text-xs text-neutral-500 mb-8">
+            <button data-view="browse" class="text-black hover:underline">Shop</button> / <span class="crumb-category capitalize"></span> / <span class="crumb-title"></span>
+        </div>
+
+        <div class="flex flex-col md:flex-row gap-12">
+            <img src="" alt="" class="w-full md:w-1/2 aspect-square object-cover bg-neutral-100">
+            <div class="flex flex-col gap-4 md:w-1/2">
+                <h2 class="text-3xl"></h2>
+                <!-- SKU and star rating -->
+                <p class="text-xs text-neutral-500">
+                    <span class="sku"></span>
+                    <span class="rating ml-4"></span>
+                </p>
+                <!-- tags are added here as pills -->
+                <div class="tags flex flex-wrap gap-2"></div>
+                <p class="stock text-xs uppercase tracking-widest"></p>
+                <p class="price text-lg"></p>
+                <p class="description text-neutral-600 leading-relaxed"></p>
+                <div class="flex items-center gap-3 text-xs">
+                    <label for="quantity" class="uppercase tracking-widest">Quantity</label>
+                    <input type="number" id="quantity" min="1" value="1"
+                        class="w-16 bg-transparent border border-neutral-300 px-2 py-2 focus:outline-none focus:border-neutral-900">
+                </div>
+                <button class="btn-add-single w-full md:w-auto md:self-start border border-black px-10 py-2 text-xs uppercase tracking-widest hover:bg-black hover:text-white">Add to cart</button>
+            </div>
+        </div>
+
+        <!-- specifications and reviews tabs -->
+        <div class="mt-16">
+            <div class="flex gap-8 border-b border-neutral-200 text-xs uppercase tracking-widest">
+                <button class="tab-btn uppercase py-3 -mb-px border-b border-neutral-900 text-neutral-900" data-tab="specs">
+                    Details
+                </button>
+                <button class="tab-btn uppercase py-3 -mb-px border-b border-transparent text-neutral-400" data-tab="reviews">
+                    Reviews
+                </button>
+            </div>
+            <div class="tab-panel pt-6" data-tab="specs">
+                <table class="w-full max-w-2xl">
+                    <tbody class="specs-body"></tbody>
+                </table>
+            </div>
+            <div class="tab-panel pt-6 hidden" data-tab="reviews">
+                <div class="reviews-list flex flex-col max-w-2xl"></div>
+            </div>
+        </div>
+    </template>
+
+    <!-- one tag pill on the single product view -->
+    <template id="tagPill">
+        <span class="border border-neutral-300 rounded-full px-3 py-0.5 text-xs text-neutral-600"></span>
+    </template>
+
+    <!-- one row in the specifications table -->
+    <template id="specRow">
+        <tr class="border-b border-neutral-200">
+            <th class="text-left font-normal text-neutral-500 py-3 pr-4 w-1/3"></th>
+            <td class="py-3"></td>
+        </tr>
+    </template>
+
+    <!-- one review in the reviews tab -->
+    <template id="reviewItem">
+        <div class="border-b border-neutral-200 py-5">
+            <p><span class="reviewer"></span> <span class="review-stars text-xs text-neutral-500 ml-2"></span></p>
+            <p class="review-date text-xs text-neutral-400"></p>
+            <p class="comment mt-2 text-neutral-600"></p>
+        </div>
+    </template>
+
 </body>
 </html>
