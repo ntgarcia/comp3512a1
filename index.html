@@ -6,6 +6,8 @@
     <title>anyshop</title>
     <link rel="stylesheet" href="src/output.css">
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- GSAP animation library, used for the floating product images in the hero (hero.js) -->
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
     <script src="js/app.js" type="module"></script>
 </head>
 <body class="text-sm text-neutral-900 min-h-screen flex flex-col">
@@ -47,12 +49,16 @@
     <main class="flex-1 w-full max-w-6xl mx-auto px-6 py-12">
         <!-- 1. home view (default) -->
         <section id="homeView" class="view">
-            <div class="text-center py-44">
-                <h2 class="text-6xl mb-20">
-                    Buy anything you want, <br> anytime all on anyshop.
+            <div class="relative overflow-hidden text-center py-44">
+                <!-- feather mask -->
+                <div id="heroImages" class="absolute inset-0 pointer-events-none [mask-image:radial-gradient(closest-side,black_55%,transparent)]"></div>
+                <h2 class="relative text-6xl mb-20 text-neutral-500 [text-shadow:0_0_12px_white,0_0_24px_white,0_0_40px_white]">
+                    Buy <span class="text-black">anything</span> you want,
+                    <br>
+                    <span class="text-black">anytime</span> all on <span class="text-black">anyshop</span>.
                 </h2>
                 <!-- goes to the browse view (handled by the main click listener in app.js) -->
-                <button data-view="browse" class="border border-black px-10 py-2 text-xs uppercase tracking-widest hover:bg-black hover:text-white">
+                <button data-view="browse" class="relative bg-white border border-black px-10 py-2 text-xs uppercase tracking-widest hover:bg-black hover:text-white">
                     Shop now
                 </button>
             </div>
@@ -275,7 +281,7 @@
         <div class="max-w-6xl mx-auto px-6 py-8 flex justify-between text-xs text-neutral-500">
             <p>© Nathan Garcia 201671101</p>
             <div>
-                <p>Github Repository Link</p>
+                Github Link:
                 <a href="https://github.com/ntgarcia/comp3512a1" class="hover:text-neutral-900 hover:underline">
                     https://github.com/ntgarcia/comp3512a1
                 </a>

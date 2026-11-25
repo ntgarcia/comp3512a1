@@ -2,6 +2,7 @@ import { showView, showSnackBar } from "./ui.js";
 import { productList, loadProducts, getProduct, getFeatured, displayProducts, displayProduct } from "./products.js";
 import { addToCart, displayCart, setupCartListeners } from "./cart.js";
 import { displayCategoryList, setupPriceInputs, updateBrowse, setupBrowseListeners } from "./browse.js";
+import { startHeroImages } from "./hero.js";
 
 // main file: wires up the page and loads the data.
 // The other files in js/ each handle one part of the page:
@@ -10,6 +11,7 @@ import { displayCategoryList, setupPriceInputs, updateBrowse, setupBrowseListene
 // browse.js - browse filters and sorting
 // cart.js - shopping cart
 // storage.js - localStorage helpers
+// hero.js - floating product images behind the home page hero (GSAP)
 document.addEventListener("DOMContentLoaded", () => {
 
     // element references
@@ -104,6 +106,7 @@ document.addEventListener("DOMContentLoaded", () => {
             setupPriceInputs();
             updateBrowse();
             displayProducts(getFeatured(productList), featured);
+            startHeroImages(productList);
             displayCart(); // redraw so older cart items can find their thumbnails
         })
         .catch(error => {
