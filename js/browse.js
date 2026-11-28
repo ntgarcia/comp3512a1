@@ -1,34 +1,33 @@
 import { productList, displayProducts } from "./products.js";
 
-// browse: filters and sorting
-// (modules run after the HTML has been parsed, so these elements already exist)
 const products = document.querySelector("#products");
 const filtersAside = document.querySelector("#filters");
 const searchName = document.querySelector("#searchName");
 const activeFiltersDiv = document.querySelector("#activeFilters");
 const categoryList = document.querySelector("#categoryList");
-const ratingOptions = document.querySelector("#ratingOptions");
+
 const priceMinInput = document.querySelector("#priceMinInput");
 const priceMaxInput = document.querySelector("#priceMaxInput");
+
 const sortBy = document.querySelector("#sortBy");
 const resultCount = document.querySelector("#resultCount");
 const noMatches = document.querySelector("#noMatches");
 
-// checked categories, stored as strings such as "category:beauty".
-// A Set only adds a value if it isn't already there, so the same
-// filter can't be added twice.
-const activeFilters = new Set();
+// checked categories, stored as strings such as "category:beauty"
+// let, because removing a filter makes a new array with filter()
+let activeFilters = [];
 
-// build a checkbox for each category; a Set keeps only the unique categories
+// build a checkbox for each category; includes() skips ones already in the list
 function displayCategoryList() {
-    const categories = new Set();
+    const categories = [];
     for (let p of productList) {
-        categories.add(p.category);
+        if (!categories.includes(p.category)) {
+            categories.push(p.category);
+        }
     }
 
     categoryList.replaceChildren();
     for (let category of categories) {
-        // the label wraps the checkbox so clicking the text also ticks it
         const label = document.createElement("label");
         label.classList.add("flex", "items-center", "gap-2", "cursor-pointer", "capitalize");
 
@@ -46,7 +45,6 @@ function displayCategoryList() {
     }
 }
 
-// highest price in the data (rounded up), used as the default "to" price
 let highestPrice = 0;
 
 // fill the "to" price box with the most expensive product's price
@@ -66,29 +64,39 @@ function lowestPrice() {
     if (priceMinInput.value === "") return 0;
     return Number(priceMinInput.value);
 }
+
 function highestAllowed() {
     if (priceMaxInput.value === "") return highestPrice;
     return Number(priceMaxInput.value);
 }
 
-// the number of stars picked in the rating options (0 means any rating)
+const ratingOptions = document.querySelector("#ratingOptions");
+
 function selectedRating() {
     return Number(ratingOptions.querySelector("input:checked").value);
 }
 
-// keep the boxes tidy when the user leaves one: no negatives,
-// nothing above the highest price, and "from" no bigger than "to"
+// price boundaries
 function fixPriceInputs(changed) {
     let low = lowestPrice();
     let high = highestAllowed();
 
     // keep both prices between 0 and the highest price
-    if (low < 0) low = 0;
-    if (high < 0) high = 0;
-    if (low > highestPrice) low = highestPrice;
-    if (high > highestPrice) high = highestPrice;
+    if (low < 0) {
+        low = 0;
+    }
 
-    // if "from" passed "to", move the other box to match
+    if (high < 0) {
+        high = 0;
+    }
+
+    if (low > highestPrice) {
+        low = highestPrice;
+    }
+
+    if (high > highestPrice) {
+        high = highestPrice;
+    }
 
     if (low > high) {
         if (changed === priceMinInput) {
@@ -97,6 +105,7 @@ function fixPriceInputs(changed) {
             low = high;
         }
     }
+    
     priceMinInput.value = low;
     priceMaxInput.value = high;
 }
@@ -185,9 +194,9 @@ function displayActiveFilters() {
         activeFiltersDiv.textContent = "No filters selected.";
     }
 
-    // a checkbox is ticked only if its category is in the Set
+    // a checkbox is ticked only if its category is in the array
     for (let checkbox of categoryList.querySelectorAll(".category-check")) {
-        checkbox.checked = activeFilters.has(checkbox.dataset.filter);
+        checkbox.checked = activeFilters.includes(checkbox.dataset.filter);
     }
 }
 
@@ -237,14 +246,14 @@ function setupBrowseListeners() {
             } else if (filter === "price") {
                 resetPrice();
             } else {
-                activeFilters.delete(filter);
+                activeFilters = activeFilters.filter(f => f !== filter);
             }
             updateBrowse();
         }
 
         // remove every filter and clear the name search
         if (e.target.id === "clearFilters") {
-            activeFilters.clear();
+            activeFilters = [];
             searchName.value = "";
             resetRating();
             resetPrice();
@@ -252,13 +261,17 @@ function setupBrowseListeners() {
         }
     });
 
-    // ticking a category checkbox adds it to the Set, unticking removes it
+    // ticking a category checkbox adds it to the array, unticking removes it
     categoryList.addEventListener("change", (e) => {
         if (e.target.classList.contains("category-check")) {
+            const filter = e.target.dataset.filter;
             if (e.target.checked) {
-                activeFilters.add(e.target.dataset.filter);
+                // only add it if it isn't already there
+                if (!activeFilters.includes(filter)) {
+                    activeFilters.push(filter);
+                }
             } else {
-                activeFilters.delete(e.target.dataset.filter);
+                activeFilters = activeFilters.filter(f => f !== filter);
             }
             updateBrowse();
         }

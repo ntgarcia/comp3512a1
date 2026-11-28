@@ -3,7 +3,6 @@ import { showView, showSnackBar } from "./ui.js";
 import { productList } from "./products.js";
 
 // shopping cart
-// (modules run after the HTML has been parsed, so these elements already exist)
 const cartItems = document.querySelector("#cartItems");
 const cartEmpty = document.querySelector("#cartEmpty");
 const cartCount = document.querySelector("#cartCount");
@@ -231,7 +230,7 @@ function checkout(e) {
 
 // add event handlers for the dropdowns and checkout button
 function setupCartListeners() {
-    // changing shipping or destination recalculates the totals
+    // changing shipping or destination recalcs the totals
     shippingMethod.addEventListener("change", displaySummary);
     destination.addEventListener("change", displaySummary);
 

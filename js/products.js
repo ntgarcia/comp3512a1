@@ -2,7 +2,6 @@ import { showView } from "./ui.js";
 import { retrieveStorage, updateStorage } from "./storage.js";
 
 // product cards and single product view
-// (modules run after the HTML has been parsed, so these elements already exist)
 const productDetails = document.querySelector("#productDetails");
 const cardTemplate = document.querySelector("#productCard");
 const singleTemplate = document.querySelector("#productSingle");
@@ -10,10 +9,8 @@ const tagTemplate = document.querySelector("#tagPill");
 const specTemplate = document.querySelector("#specRow");
 const reviewTemplate = document.querySelector("#reviewItem");
 
-// all products (filled in by app.js once loadProducts() finishes)
 const productList = [];
 
-// the API for all product data
 const API_URL = "https://dummyjson.com/products";
 
 
@@ -25,9 +22,14 @@ async function loadProducts() {
 
     if (data.length === 0) {
         const response = await fetch(`${API_URL}?limit=100`);
-        if (!response.ok) throw new Error("Fetch failed: " + response.status);
+        if (!response.ok) {
+            return Promise.reject({
+                status: response.status,
+                statusText: response.statusText
+            });
+        }
 
-        // the API wraps the array: { products: [...], total, skip, limit }
+        // the API wraps array: { products: [...], total, skip, limit }
         const json = await response.json();
         data = json.products;
         updateStorage("products", data);
@@ -43,12 +45,18 @@ async function getProduct(id) {
     if (found) return found;
 
     const response = await fetch(`${API_URL}/${id}`);
-    if (!response.ok) throw new Error("Fetch failed: " + response.status);
+    if (!response.ok) {
+        return Promise.reject({
+            status: response.status,
+            statusText: response.statusText
+        });
+    }
     return await response.json();
 }
 
 
-// Featured products: find the 4 categories with the most products,
+// Featured products:
+// find the 4 categories with the most products
 // then pick the highest-rated product from each of them.
 function getFeatured(list) {
     // count how many products are in each category
@@ -57,7 +65,7 @@ function getFeatured(list) {
         counts[p.category] = (counts[p.category] || 0) + 1;
     }
 
-    // the 4 biggest categories
+    // 4 biggest categories
     const categories = [];
     for (let category in counts) {
         categories.push(category);

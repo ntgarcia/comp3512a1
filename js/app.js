@@ -5,6 +5,7 @@ import { displayCategoryList, setupPriceInputs, updateBrowse, setupBrowseListene
 import { startHeroImages } from "./hero.js";
 
 // main file: wires up the page and loads the data.
+
 // The other files in js/ each handle one part of the page:
 // ui.js - view switching and the snackbar
 // products.js - product cards and the single product view

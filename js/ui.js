@@ -1,5 +1,4 @@
 // view switching and snackbar
-// (modules run after the HTML has been parsed, so these elements already exist)
 const views = document.querySelectorAll(".view");
 const snackbar = document.querySelector("#snackbar");
 
@@ -12,6 +11,7 @@ function showView(name) {
             view.classList.add("hidden");
         }
     }
+    // added to jump to top of screen from view changes
     window.scrollTo(0, 0);
 }
 
